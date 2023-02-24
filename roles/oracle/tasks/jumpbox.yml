@@ -1,0 +1,13 @@
+---
+- name: Pull the containers images
+  shell: docker-compose pull
+  args:
+    chdir: "{{ bridge_path }}/oracle"
+  when: skip_pull is undefined
+
+- name: Install Loki Driver
+  shell: docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+  check_mode: no
+  # args:
+  #   chdir: "{{ bridge_path }}/oracle"
+  # when: skip_pull is undefined

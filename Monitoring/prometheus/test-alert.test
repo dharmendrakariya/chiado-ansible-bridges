@@ -1,0 +1,64 @@
+groups:
+
+- name: node/validator
+  rules:
+
+###
+
+
+#####################################################################
+
+  - alert: bridge_request
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_request",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_request"
+      description: "bridge_request container is down for more than 2 seconds."
+
+
+  - alert: bridge_collected
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_collected",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_collected down"
+      description: "bridge_collected container is down for more than 2 seconds."
+
+  - alert: bridge_affirmation
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_affirmation",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_affirmation down"
+      description: "bridge_affirmation container is down for more than 2 seconds."
+
+  - alert: bridge_senderhome
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_senderhome",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_senderhome down"
+      description: "bridge_senderhome container is down for more than 2 seconds."
+
+  - alert: bridge_senderforeign
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_senderforeign",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_senderforeign down"
+      description: "bridge_senderforeign container is down for more than 2 seconds."
+
+  - alert: bridge_shutdown
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="bridge_shutdown",server="PRODUCTION"})
+    for: 2s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: bridge_shutdown down"
+      description: "bridge_shutdown container is down for more than 2 seconds."

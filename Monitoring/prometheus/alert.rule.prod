@@ -1,0 +1,53 @@
+groups:
+
+- name: prod_containers
+  rules:
+
+###
+
+  - alert: prometheus_down
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="prometheus",server="PRODUCTION"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: Prometheus down"
+      description: "Prometheus container is down for more than 10 seconds."
+
+  - alert: grafana_down
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="grafana",server="PRODUCTION"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: Grafana down"
+      description: "Grafana container is down for more than 10 seconds."
+
+  - alert: alertmanager_down
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="alertmanager",server="PRODUCTION"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: Alertmanager down"
+      description: "Alertmanager container is down for more than 10 seconds."
+
+  - alert: cadvisor_down
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="cadvisor",server="PRODUCTION"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: Cadvisor down"
+      description: "Cadvisor container is down for more than 10 seconds."
+
+  - alert: node_exporter_down
+    expr: absent(container_memory_usage_bytes{container_label_com_docker_compose_service="node-exporter",server="PRODUCTION"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{$labels.server}}: Node Exporter down"
+      description: "Node Exporter container is down for more than 10 seconds."
+
+

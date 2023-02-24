@@ -1,0 +1,203 @@
+version: "3.5"
+
+services:
+
+    prometheus:
+        image: prom/prometheus
+        container_name: prometheus
+        volumes:
+            - ./prometheus/:/etc/prometheus/
+            - prometheus_data:/prometheus
+            # - ./prometheus/alert.rules.host:/etc/prometheus/alert.rules.host
+            # - ./prometheus/alert.rules.prod:/etc/prometheus/alert.rules.prod
+            # - ./prometheus/test-alert.test:/etc/prometheus/test-alert.test
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--query.max-samples=100000000'
+            - '--storage.tsdb.path=/prometheus'
+            - '--web.console.libraries=/etc/prometheus/console_libraries'
+            - '--web.console.templates=/etc/prometheus/consoles'
+            - '--storage.tsdb.retention=200h'
+            - '--web.enable-lifecycle'
+            
+        restart: unless-stopped
+        expose:
+            - 9090
+        ports:
+            - "9090:9090"
+        
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+  
+
+    grafana:
+        image: grafana/grafana
+        
+        container_name: grafana
+        restart: unless-stopped
+        expose:
+            - 3000
+        ports:
+            - "3000:3000"
+
+        volumes:
+            - ./grafana/:/etc/grafana/provisioning/
+        
+        environment:
+            - "GF_SECURITY_ADMIN_PASSWORD=admin123"
+            - GF_USERS_ALLOW_SIGN_UP=false
+            - GF_SERVER_HTTP_PORT=3000
+            - GF_SERVER_PROTOCOL=http
+            - GF_SERVER_DOMAIN=valid.blabla.com
+            - GF_SERVER_ROOT_URL=http://valid.blabla.com
+            - GF_SERVER_SERVE_FROM_SUB_PATH=true
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.whoami.rule=Host(`valid.blabla.com`)"
+            - "traefik.http.routers.whoami.entrypoints=websecure"
+            - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+    
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+    loki:
+        image: grafana/loki
+        ports:
+            - "3100:3100"
+        volumes:
+            - ./loki/:/etc/loki
+        command: -config.file=/etc/loki/loki-config.yaml
+
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+
+    promtail:
+        image: grafana/promtail
+        volumes:
+            - /var/lib/docker/containers:/var/lib/docker/containers
+            - /var/log:/var/log
+            - ./promtail/:/etc/promtail 
+        command: -config.file=/etc/promtail/promtail-config.yaml
+        
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+
+    node-exporter:
+        container_name: node-exporter
+        image: prom/node-exporter
+        restart: always
+        command:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --path.rootfs=/rootfs
+        - --collector.filesystem.ignored-mount-points
+        - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns)(/)
+        cap_add:
+        - SYS_TIME
+        volumes:
+        - /proc:/host/proc:ro
+        - /sys:/host/sys:ro
+        - /:/rootfs:ro
+        
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+    
+    cadvisor:
+        container_name: cadvisor
+        image: gcr.io/cadvisor/cadvisor
+        restart: always
+        volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:rw
+        - /sys:/sys:ro
+        - /var/lib/docker/:/var/lib/docker:ro
+
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+    
+    alertmanager:
+        image: prom/alertmanager
+        container_name: alertmanager
+        restart: unless-stopped
+        ports:
+          - "9093:9093"
+        expose:
+            - 9093
+        volumes:
+          - "./alertmanager:/config"
+          - alertmanager-data:/data
+        command: --config.file=/config/alertmanager.yml --log.level=debug
+
+        networks:
+            - net_db_bridge_request
+            - net_db_bridge_collected
+            - net_db_bridge_affirmation
+            - net_db_bridge_senderhome
+            - net_db_bridge_senderforeign
+            - net_db_bridge_shutdown
+            - eco-system
+
+networks:
+    eco-system:
+        name: eco-system
+    net_db_bridge_request:
+        name: net_db_bridge_request
+    net_db_bridge_collected:
+        name: net_db_bridge_collected
+    net_db_bridge_affirmation:
+        name: net_db_bridge_affirmation
+    net_db_bridge_senderhome:
+        name: net_db_bridge_senderhome
+    net_db_bridge_senderforeign:
+        name: net_db_bridge_senderforeign
+    net_db_bridge_shutdown:
+        name: net_db_bridge_shutdown
+    net_rabbit_bridge_request:
+        name: net_rabbit_bridge_request
+    net_rabbit_bridge_collected:
+        name: net_rabbit_bridge_collected
+    net_rabbit_bridge_affirmation:
+        name: net_rabbit_bridge_affirmation
+    net_rabbit_bridge_senderhome:
+        name: net_rabbit_bridge_senderhome
+    net_rabbit_bridge_senderforeign:
+        name: net_rabbit_bridge_senderforeign
+
+volumes:
+    prometheus_data: {}
+    alertmanager-data:
